@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, isAuthenticated } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +39,7 @@ export default function Login() {
       if (error) {
         toast({
           title: "Login Failed",
-          description: "Invalid credentials. Please try again.",
+          description: error.message || "Invalid credentials. Please try again.",
           variant: "destructive"
         });
       } else {
@@ -100,6 +108,15 @@ export default function Login() {
               Login to Owner Portal
             </Link>
           </p>
+        </div>
+        
+        <div className="mt-4 text-center">
+          <hr className="my-4" />
+          <p className="text-xs text-muted-foreground mb-2">Demo Logins:</p>
+          <div className="flex flex-col space-y-1 text-xs">
+            <span><strong>Admin:</strong> admin@example.com / Admin123!</span>
+            <span><strong>Agent:</strong> agent@example.com / Agent123!</span>
+          </div>
         </div>
       </div>
     </div>

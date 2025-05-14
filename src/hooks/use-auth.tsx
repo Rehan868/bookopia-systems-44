@@ -31,12 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function initializeAuth() {
       setIsLoading(true);
       
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user || null);
-      
-      // Set up subscription for auth changes
+      // First, set up the auth state change listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (_event, session) => {
           setSession(session);
@@ -44,6 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         }
       );
+      
+      // Then, check for current session
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setUser(session?.user || null);
       
       setIsLoading(false);
       
@@ -63,17 +63,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       if (error) {
+        console.error("Login error:", error);
         return { error };
       }
       
       // Check if user has correct role
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user?.id)
-        .single();
+      const role = data.user?.user_metadata?.role;
       
-      if (profileData?.role === 'owner') {
+      if (role === 'owner') {
         // If owner is trying to login via staff portal, log them out
         await supabase.auth.signOut();
         return { error: new Error("Please use the Owner Portal to login") };
@@ -81,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       return { error: null };
     } catch (error) {
+      console.error("Login exception:", error);
       return { error: error as Error };
     }
   }
@@ -94,17 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       if (error) {
+        console.error("Owner login error:", error);
         return { error };
       }
       
       // Check if user has owner role
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user?.id)
-        .single();
+      const role = data.user?.user_metadata?.role;
       
-      if (profileData?.role !== 'owner') {
+      if (role !== 'owner') {
         // If staff is trying to login via owner portal, log them out
         await supabase.auth.signOut();
         return { error: new Error("Please use the Staff Portal to login") };
@@ -112,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       return { error: null };
     } catch (error) {
+      console.error("Owner login exception:", error);
       return { error: error as Error };
     }
   }
@@ -124,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully logged out."
       });
     } catch (error) {
+      console.error("Logout error:", error);
       toast({
         title: "Error",
         description: "Failed to log out. Please try again.",

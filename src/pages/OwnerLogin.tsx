@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,14 @@ export default function OwnerLogin() {
   const [password, setPassword] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { ownerLogin, isLoading } = useAuth();
+  const { ownerLogin, isLoading, isAuthenticated, isOwner } = useAuth();
+
+  // Redirect if already authenticated as owner
+  useEffect(() => {
+    if (isAuthenticated && isOwner()) {
+      navigate('/owner/dashboard');
+    }
+  }, [isAuthenticated, isOwner, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +39,7 @@ export default function OwnerLogin() {
       if (error) {
         toast({
           title: "Login Failed",
-          description: "Invalid credentials. Please try again.",
+          description: error.message || "Invalid credentials. Please try again.",
           variant: "destructive"
         });
       } else {
@@ -100,6 +108,14 @@ export default function OwnerLogin() {
               Login to Staff Portal
             </Link>
           </p>
+        </div>
+        
+        <div className="mt-4 text-center">
+          <hr className="my-4" />
+          <p className="text-xs text-muted-foreground mb-2">Demo Login:</p>
+          <div className="text-xs">
+            <span><strong>Owner:</strong> rehan@gmail.com / Rehan8688@</span>
+          </div>
         </div>
       </div>
     </div>

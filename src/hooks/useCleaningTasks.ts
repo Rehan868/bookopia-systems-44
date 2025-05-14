@@ -1,42 +1,39 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchCleaningTasks } from '@/services/api';
-import { useToast } from './use-toast';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getCleaningTasks, updateCleaningTask } from '@/services/api';
+import type { CleaningTask } from '@/services/supabase-types';
 
-export const useCleaningTasks = () => {
-  return useQuery({
-    queryKey: ['cleaning-tasks'],
+export const useCleaningTasks = (filterOptions?: Record<string, any>) => {
+  const { 
+    data, 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['cleaningTasks', filterOptions],
     queryFn: async () => {
-      return await fetchCleaningTasks();
+      const result = await getCleaningTasks({ filter: filterOptions });
+      return result;
     }
   });
-};
 
-// Create a separate hook for updating cleaning task status
-export const useUpdateCleaningTaskStatus = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: string }) => {
-      // For now we'll just create a placeholder function since we don't have the actual API function
-      // This will be replaced with the real API call when it's available
-      console.log(`Updating task ${id} to status ${status}`);
-      return Promise.resolve({ success: true });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cleaning-tasks'] });
-      toast({
-        title: 'Cleaning task updated',
-        description: 'The cleaning task status has been updated successfully',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Failed to update cleaning task',
-        description: error.message,
-        variant: 'destructive',
-      });
+  const updateTaskStatus = async (taskId: string, status: string) => {
+    try {
+      await updateCleaningTask(taskId, { status });
+      // Refetch data after update
+      refetch();
+      return { success: true, error: null };
+    } catch (error) {
+      console.error("Error updating cleaning task:", error);
+      return { success: false, error };
     }
-  });
+  };
+
+  return {
+    tasks: data?.data || [],
+    isLoading,
+    error: error as Error | null,
+    updateTaskStatus
+  };
 };

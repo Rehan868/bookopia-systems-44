@@ -1,32 +1,65 @@
 
 import { useState, useEffect } from 'react';
-import { fetchProperties } from '@/services/api';
-import { Property } from '@/services/supabase-types';
+import { getProperties, getPropertyById } from '@/services/api';
+import type { Property } from '@/services/supabase-types';
 
-export function useProperties() {
-  const [data, setData] = useState<Property[]>([]);
+export const useProperties = () => {
+  const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    async function loadProperties() {
+    async function fetchData() {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        const result = await fetchProperties();
-        // Ensure we're setting just the data array, not an object containing the data
-        setData(Array.isArray(result) ? result : (result.data || []));
+        const result = await getProperties();
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setProperties(result.data);
+        }
       } catch (err) {
-        console.error('Error loading properties:', err);
-        setError(err instanceof Error ? err : new Error('Failed to load properties'));
-        // Set empty array on error to avoid null pointer exceptions
-        setData([]);
+        setError(err as Error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadProperties();
+    fetchData();
   }, []);
 
-  return { data, isLoading, error };
-}
+  return { properties, isLoading, error };
+};
+
+export const useProperty = (id: string) => {
+  const [property, setProperty] = useState<Property | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      setIsLoading(false);
+      return;
+    }
+
+    async function fetchData() {
+      setIsLoading(true);
+      try {
+        const result = await getPropertyById(id);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setProperty(result.data);
+        }
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [id]);
+
+  return { property, isLoading, error };
+};

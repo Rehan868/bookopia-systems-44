@@ -1,33 +1,65 @@
 
 import { useState, useEffect } from 'react';
-import { RoomType } from '@/services/supabase-types';
-import { fetchRoomTypes } from '@/services/api';
+import { getRoomTypes, getRoomTypeById } from '@/services/api';
+import type { RoomType } from '@/services/supabase-types';
 
-export function useRoomTypes() {
-  const [data, setData] = useState<RoomType[]>([]);
+export const useRoomTypes = () => {
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    async function loadRoomTypes() {
+    async function fetchData() {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        // Make sure we're calling fetchRoomTypes with any required parameters
-        const result = await fetchRoomTypes({});
-        // Ensure we're setting just the data array, not an object containing the data
-        setData(Array.isArray(result) ? result : (result.data || []));
+        const result = await getRoomTypes();
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setRoomTypes(result.data);
+        }
       } catch (err) {
-        console.error('Error loading room types:', err);
-        setError(err instanceof Error ? err : new Error('Failed to load room types'));
-        // Set empty array on error to avoid null pointer exceptions
-        setData([]);
+        setError(err as Error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadRoomTypes();
+    fetchData();
   }, []);
 
-  return { data, isLoading, error };
-}
+  return { roomTypes, isLoading, error };
+};
+
+export const useRoomType = (id: string) => {
+  const [roomType, setRoomType] = useState<RoomType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      setIsLoading(false);
+      return;
+    }
+
+    async function fetchData() {
+      setIsLoading(true);
+      try {
+        const result = await getRoomTypeById(id);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setRoomType(result.data);
+        }
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [id]);
+
+  return { roomType, isLoading, error };
+};

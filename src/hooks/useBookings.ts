@@ -142,6 +142,131 @@ const mockBookings = [
   },
 ];
 
+export const getBookings = async (options?: { filter?: Record<string, any>; limit?: number; offset?: number }) => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  try {
+    // For now, return mock data
+    const bookings = mockBookings;
+    
+    // Filter if needed
+    let filteredBookings = bookings;
+    if (options?.filter) {
+      // Apply filtering logic here
+      const { status, checkInDate, paymentStatus, search } = options.filter;
+      
+      if (status) {
+        filteredBookings = filteredBookings.filter(b => b.status === status);
+      }
+      
+      if (paymentStatus) {
+        filteredBookings = filteredBookings.filter(b => b.payment_status === paymentStatus);
+      }
+      
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filteredBookings = filteredBookings.filter(b => 
+          b.reference.toLowerCase().includes(searchLower) ||
+          b.guests?.first_name.toLowerCase().includes(searchLower) ||
+          b.guests?.last_name.toLowerCase().includes(searchLower)
+        );
+      }
+    }
+    
+    // Apply pagination
+    const limit = options?.limit || 10;
+    const offset = options?.offset || 0;
+    const paginatedBookings = filteredBookings.slice(offset, offset + limit);
+    
+    return { 
+      data: paginatedBookings, 
+      error: null,
+      total: filteredBookings.length
+    };
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    return { 
+      data: [],
+      error: error as Error
+    };
+  }
+};
+
+export const useBookings = (filter?: Record<string, any>) => {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [total, setTotal] = useState(0);
+  
+  useEffect(() => {
+    async function fetchBookings() {
+      setIsLoading(true);
+      const result = await getBookings({ filter });
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setBookings(result.data);
+        setTotal(result.total || result.data.length);
+      }
+      setIsLoading(false);
+    }
+    
+    fetchBookings();
+  }, [filter]);
+  
+  return { bookings, isLoading, error, total };
+};
+
+export const getBookingById = async (id: string) => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  try {
+    const booking = mockBookings.find(b => b.id === id);
+    
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+    
+    return { 
+      data: booking, 
+      error: null
+    };
+  } catch (error) {
+    console.error(`Error fetching booking ${id}:`, error);
+    return { 
+      data: null,
+      error: error as Error
+    };
+  }
+};
+
+export const useBooking = (id: string) => {
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    async function fetchBooking() {
+      setIsLoading(true);
+      const result = await getBookingById(id);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setBooking(result.data);
+      }
+      setIsLoading(false);
+    }
+    
+    if (id) {
+      fetchBooking();
+    }
+  }, [id]);
+  
+  return { booking, isLoading, error };
+};
+
 export function useBookings() {
   const [data, setData] = useState<Booking[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
