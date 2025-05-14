@@ -17,117 +17,128 @@ const mockBookings = [
     id: '1',
     booking_number: 'BK-2023-0001',
     guest_name: 'John Smith',
-    check_in: '2023-06-15',
-    check_out: '2023-06-18',
+    check_in_date: '2023-06-15',
+    check_out_date: '2023-06-18',
     status: 'confirmed',
-    amount: 450,
-    rooms: { number: '101', property: 'Marina Tower' },
+    total_amount: 450,
+    rooms: { number: '101', property_id: 'Marina Tower' },
     commission: 45,
-    tourismFee: 13.5,
+    tourism_fee: 13.5,
     vat: 22.5,
-    netToOwner: 369,
-    securityDeposit: 100,
-    baseRate: 150,
+    net_to_owner: 369,
+    security_deposit: 100,
+    base_rate: 150,
     adults: 2,
     children: 0,
-    guestEmail: 'john.smith@example.com',
-    guestPhone: '+1 (555) 123-4567',
+    guests: { 
+      email: 'john.smith@example.com',
+      phone: '+1 (555) 123-4567'
+    },
     payment_status: 'paid',
-    amountPaid: 450,
-    pendingAmount: 0,
-    guestDocument: 'passport-123.pdf'
+    amount_paid: 450,
+    pending_amount: 0,
+    notes: 'Guest requested a high floor with ocean view.',
+    reference: 'BK-2023-0001'
   },
   {
     id: '2',
     booking_number: 'BK-2023-0002',
     guest_name: 'Emma Johnson',
-    check_in: '2023-06-14',
-    check_out: '2023-06-16',
+    check_in_date: '2023-06-14',
+    check_out_date: '2023-06-16',
     status: 'checked-in',
-    amount: 350,
-    rooms: { number: '205', property: 'Downtown Heights' },
+    total_amount: 350,
+    rooms: { number: '205', property_id: 'Downtown Heights' },
     commission: 35,
-    tourismFee: 10.5,
+    tourism_fee: 10.5,
     vat: 18,
-    netToOwner: 295,
-    securityDeposit: 100,
-    baseRate: 150,
+    net_to_owner: 295,
+    security_deposit: 100,
+    base_rate: 150,
     adults: 1,
     children: 1,
-    guestEmail: 'emma.johnson@example.com',
-    guestPhone: '+1 (555) 987-6543',
+    guests: { 
+      email: 'emma.johnson@example.com',
+      phone: '+1 (555) 987-6543'
+    },
     payment_status: 'pending',
-    amountPaid: 350,
-    pendingAmount: 0
+    amount_paid: 350,
+    pending_amount: 0
   },
   {
     id: '3',
     booking_number: 'BK-2023-0003',
     guest_name: 'Michael Chen',
-    check_in: '2023-06-12',
-    check_out: '2023-06-13',
+    check_in_date: '2023-06-12',
+    check_out_date: '2023-06-13',
     status: 'checked-out',
-    amount: 175,
-    rooms: { number: '304', property: 'Marina Tower' },
+    total_amount: 175,
+    rooms: { number: '304', property_id: 'Marina Tower' },
     commission: 17.5,
-    tourismFee: 5.25,
+    tourism_fee: 5.25,
     vat: 8.75,
-    netToOwner: 142.5,
-    securityDeposit: 100,
-    baseRate: 150,
+    net_to_owner: 142.5,
+    security_deposit: 100,
+    base_rate: 150,
     adults: 1,
     children: 0,
-    guestEmail: 'michael.chen@example.com',
-    guestPhone: '+1 (555) 555-1234',
+    guests: { 
+      email: 'michael.chen@example.com',
+      phone: '+1 (555) 555-1234'
+    },
     payment_status: 'paid',
-    amountPaid: 175,
-    pendingAmount: 0
+    amount_paid: 175,
+    pending_amount: 0
   },
   {
     id: '4',
     booking_number: 'BK-2023-0004',
     guest_name: 'Sarah Davis',
-    check_in: '2023-06-18',
-    check_out: '2023-06-20',
+    check_in_date: '2023-06-18',
+    check_out_date: '2023-06-20',
     status: 'confirmed',
-    amount: 300,
-    rooms: { number: '102', property: 'Downtown Heights' },
+    total_amount: 300,
+    rooms: { number: '102', property_id: 'Downtown Heights' },
     commission: 30,
-    tourismFee: 9,
+    tourism_fee: 9,
     vat: 16.5,
-    netToOwner: 253.5,
-    securityDeposit: 100,
-    baseRate: 150,
+    net_to_owner: 253.5,
+    security_deposit: 100,
+    base_rate: 150,
     adults: 2,
     children: 0,
-    guestEmail: 'sarah.davis@example.com',
-    guestPhone: '+1 (555) 321-6543',
+    guests: { 
+      email: 'sarah.davis@example.com',
+      phone: '+1 (555) 321-6543'
+    },
     payment_status: 'pending',
-    amountPaid: 300,
-    pendingAmount: 0
+    amount_paid: 300,
+    pending_amount: 0
   },
   {
     id: '5',
     booking_number: 'BK-2023-0005',
     guest_name: 'David Wilson',
-    check_in: '2023-06-10',
-    check_out: '2023-06-15',
+    check_in_date: '2023-06-10',
+    check_out_date: '2023-06-15',
     status: 'checked-out',
-    amount: 625,
-    rooms: { number: '401', property: 'Marina Tower' },
+    total_amount: 625,
+    rooms: { number: '401', property_id: 'Marina Tower' },
     commission: 62.5,
-    tourismFee: 18.75,
+    tourism_fee: 18.75,
     vat: 31.25,
-    netToOwner: 521.25,
-    securityDeposit: 100,
-    baseRate: 150,
+    net_to_owner: 521.25,
+    security_deposit: 100,
+    base_rate: 150,
     adults: 2,
     children: 0,
-    guestEmail: 'david.wilson@example.com',
-    guestPhone: '+1 (555) 789-1234',
+    guests: { 
+      email: 'david.wilson@example.com',
+      phone: '+1 (555) 789-1234'
+    },
     payment_status: 'paid',
-    amountPaid: 625,
-    pendingAmount: 0
+    amount_paid: 625,
+    pending_amount: 0
   },
 ];
 
@@ -299,7 +310,7 @@ export function useTodayCheckins() {
         console.warn('Falling back to mock data');
         const today = new Date().toISOString().split('T')[0];
         const checkins = mockBookings.filter(
-          booking => booking.check_in.split('T')[0] === today && booking.status === 'confirmed'
+          booking => booking.check_in_date.split('T')[0] === today && booking.status === 'confirmed'
         );
         setData(checkins as unknown as Booking[]);
       }
@@ -342,7 +353,7 @@ export function useTodayCheckouts() {
         console.warn('Falling back to mock data');
         const today = new Date().toISOString().split('T')[0];
         const checkouts = mockBookings.filter(
-          booking => booking.check_out.split('T')[0] === today && booking.status === 'checked-in'
+          booking => booking.check_out_date.split('T')[0] === today && booking.status === 'checked-in'
         );
         setData(checkouts as unknown as Booking[]);
       }

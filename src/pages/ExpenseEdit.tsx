@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,9 +34,9 @@ const expenseFormSchema = z.object({
   category: z.string().min(1, "Category is required"),
   property: z.string().min(1, "Property is required"),
   vendor: z.string().optional(),
-  paymentMethod: z.string().optional(),
+  payment_method: z.string().optional(),
   notes: z.string().optional(),
-  owner: z.string().optional()
+  owner_id: z.string().optional()
 });
 
 const ExpenseEdit = () => {
@@ -54,9 +55,9 @@ const ExpenseEdit = () => {
       category: '',
       property: '',
       vendor: '',
-      paymentMethod: '',
+      payment_method: '',
       notes: '',
-      owner: ''
+      owner_id: ''
     },
     mode: "onChange",
   });
@@ -71,9 +72,9 @@ const ExpenseEdit = () => {
         category: expense.category,
         property: expense.property,
         vendor: expense.vendor || '',
-        paymentMethod: expense.paymentMethod || '',
+        payment_method: expense.payment_method || '',
         notes: expense.notes || '',
-        owner: expense.owner || ''
+        owner_id: expense.owner_id || ''
       });
     }
   }, [expense, form]);
@@ -244,7 +245,7 @@ const ExpenseEdit = () => {
             
             <FormField
               control={form.control}
-              name="paymentMethod"
+              name="payment_method"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Payment Method</FormLabel>
@@ -287,7 +288,7 @@ const ExpenseEdit = () => {
             
             <FormField
               control={form.control}
-              name="owner"
+              name="owner_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Owner</FormLabel>
