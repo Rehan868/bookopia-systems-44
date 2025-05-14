@@ -1,131 +1,182 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatar_url?: string | null;
-}
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { User, Session } from "@supabase/supabase-js";
 
-interface AuthContextType {
-  isAuthenticated: boolean;
+type AuthContextType = {
   user: User | null;
-  login: (email: string, password: string) => Promise<{ error: Error | null }>;
-  logout: () => Promise<void>;
-  ownerLogin: (email: string, password: string) => Promise<{ error: Error | null }>;
+  session: Session | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
-}
+  login: (email: string, password: string) => Promise<{ error: Error | null }>;
+  ownerLogin: (email: string, password: string) => Promise<{ error: Error | null }>;
+  logout: () => Promise<void>;
+  getRole: () => "admin" | "agent" | "owner" | null;
+  isAdmin: () => boolean;
+  isAgent: () => boolean;
+  isOwner: () => boolean;
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Initialize isLoading to true
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
+  // Initialize and listen for auth changes
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('user');
-    const storedIsAuthenticated = localStorage.getItem('isAuthenticated');
-    
-    if (storedUser && storedIsAuthenticated === 'true') {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
+    async function initializeAuth() {
+      setIsLoading(true);
+      
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setUser(session?.user || null);
+      
+      // Set up subscription for auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          setUser(session?.user || null);
+          setIsLoading(false);
+        }
+      );
+      
+      setIsLoading(false);
+      
+      // Cleanup subscription
+      return () => subscription.unsubscribe();
     }
-    setIsLoading(false); // Set isLoading to false after attempting to load from localStorage
+    
+    initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    
+  // Regular staff login (admin, agent)
+  async function login(email: string, password: string) {
     try {
-      // Simulate API call with delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // For demo purposes, we'll just accept any credentials
-      const mockUser = {
-        id: '1',
-        name: 'Admin User',
-        email: email,
-        role: 'admin',
-      };
+      if (error) {
+        return { error };
+      }
       
-      // Store in local storage
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('isAuthenticated', 'true');
+      // Check if user has correct role
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user?.id)
+        .single();
       
-      // Update state
-      setUser(mockUser);
-      setIsAuthenticated(true);
+      if (profileData?.role === 'owner') {
+        // If owner is trying to login via staff portal, log them out
+        await supabase.auth.signOut();
+        return { error: new Error("Please use the Owner Portal to login") };
+      }
       
       return { error: null };
     } catch (error) {
-      console.error('Login error:', error);
       return { error: error as Error };
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }
   
-  const ownerLogin = async (email: string, password: string) => {
-    setIsLoading(true);
-    
+  // Owner login
+  async function ownerLogin(email: string, password: string) {
     try {
-      // Simulate API call with delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      const mockUser = {
-        id: '2',
-        name: 'Owner User',
-        email: email,
-        role: 'owner',
-      };
+      if (error) {
+        return { error };
+      }
       
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('isAuthenticated', 'true');
+      // Check if user has owner role
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user?.id)
+        .single();
       
-      setUser(mockUser);
-      setIsAuthenticated(true);
+      if (profileData?.role !== 'owner') {
+        // If staff is trying to login via owner portal, log them out
+        await supabase.auth.signOut();
+        return { error: new Error("Please use the Staff Portal to login") };
+      }
       
       return { error: null };
     } catch (error) {
-      console.error('Owner login error:', error);
       return { error: error as Error };
-    } finally {
-      setIsLoading(false);
     }
-  };
-  
-  const logout = async () => {
-    setIsLoading(true);
-    
+  }
+
+  async function logout() {
     try {
-      // Remove from local storage
-      localStorage.removeItem('user');
-      localStorage.removeItem('isAuthenticated');
-      
-      // Update state
-      setUser(null);
-      setIsAuthenticated(false);
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out."
+      });
     } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setIsLoading(false);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive"
+      });
     }
+  }
+
+  function getRole(): "admin" | "agent" | "owner" | null {
+    if (!user) return null;
+    
+    // Return from user metadata if available
+    const roleFromMeta = user.user_metadata?.role as "admin" | "agent" | "owner" | null;
+    if (roleFromMeta) return roleFromMeta;
+    
+    // Fallback to app_metadata
+    const roleFromApp = user.app_metadata?.role as "admin" | "agent" | "owner" | null;
+    return roleFromApp || null;
+  }
+
+  function isAdmin() {
+    return getRole() === "admin";
+  }
+
+  function isAgent() {
+    return getRole() === "agent";
+  }
+
+  function isOwner() {
+    return getRole() === "owner";
+  }
+
+  const value = {
+    user,
+    session,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    ownerLogin,
+    logout,
+    getRole,
+    isAdmin,
+    isAgent,
+    isOwner,
   };
 
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, ownerLogin, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
